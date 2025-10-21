@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>英単語 寿司タイピング</title>
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --panel: #ffffff;
+        --accent: #0284c7;
+        --good: #16a34a;
+        --bad: #dc2626;
+        --text: #0f172a;
+        --muted: #475569;
+        --belt: #e2e8f0;
+        --plate: #93c5fd;
+        --plate-text: #082f49;
+        --border: #e5e7eb;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 800px at 20% -20%, #ffffff, var(--bg));
+        color: var(--text);
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+      }
+      body.playing header,
+      body.playing .toolbar,
+      body.playing .stats { display: none; }
+      header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 0.5px;
+      }
+      header .sub { color: var(--muted); font-size: 12px; }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
+        padding: 12px 16px;
+      }
+      .toolbar label {
+        font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px;
+      }
+      .toolbar .group { background: var(--panel); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
+      select, button, input[type="file"] {
+        width: 100%;
+        background: #ffffff;
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        border-radius: 6px;
+      }
+      button.primary { background: #e0f2fe; border-color: #bae6fd; }
+      button.primary:hover { background: #bae6fd; cursor: pointer; }
+      .toggle {
+        display: flex; align-items: center; gap: 8px; user-select: none; cursor: pointer;
+      }
+      .toggle input { accent-color: var(--accent); }
+
+      .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 0 16px 12px; margin-top: -4px; }
+      .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+      .stat .label { color: var(--muted); font-size: 12px; }
+      .stat .value { font-size: 18px; margin-top: 2px; }
+
+      #board {
+        position: relative;
+        height: 380px;
+        margin: 8px 16px 12px;
+        border-radius: 10px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+      #lane {
+        position: absolute;
+        left: 0; right: 0; top: 65%; transform: translateY(-50%);
+        height: 120px;
+        background: repeating-linear-gradient(90deg, var(--belt) 0 8px, #f1f5f9 8px 16px);
+        border-top: 2px solid #e2e8f0; border-bottom: 2px solid #e2e8f0;
+        box-shadow: inset 0 8px 16px rgba(0,0,0,0.08), inset 0 -8px 16px rgba(0,0,0,0.08);
+      }
+      .plate {
+        position: absolute;
+        top: calc(50% - 48px);
+        transform: translateY(-50%);
+        height: 64px; min-width: 140px; max-width: 260px;
+        padding: 8px 12px;
+        background: radial-gradient(180px 48px at 50% 50%, #bfdbfe, var(--plate));
+        color: var(--plate-text);
+        border-radius: 999px;
+        border: 2px solid #bfdbfe;
+        display: flex; align-items: center; justify-content: center;
+        text-align: center; font-weight: 600; letter-spacing: 0.2px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        transition: transform 120ms ease-out, filter 120ms ease-out;
+      }
+      .plate .pos { margin-left: 8px; font-size: 12px; opacity: 0.7; }
+      .plate.target { outline: 3px solid var(--accent); filter: brightness(1.02); }
+      .plate.miss { animation: miss 300ms ease-out; }
+      .plate.hit { animation: hit 300ms ease-out; }
+      @keyframes miss { from { transform: translateY(-50%) scale(1); } 50% { transform: translateY(-50%) scale(0.94); } to { transform: translateY(-50%) scale(1); } }
+      @keyframes hit  { from { transform: translateY(-50%) scale(1); } 50% { transform: translateY(-50%) scale(1.06); } to { transform: translateY(-50%) scale(1); } }
+
+      #focus {
+        position: absolute; left: 16px; right: 16px; top: 16px;
+        display: grid; grid-template-columns: 1fr; gap: 8px;
+      }
+      #focus .prompt { background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+      #focus .prompt .head { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+      #focus .prompt .text { font-size: 16px; }
+      #focus .prompt .coach { color: var(--muted); font-size: 12px; margin-top: 6px; opacity: 0.9; background: transparent; }
+      #focus .progress {
+        display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap;
+      }
+      #focus .progress .word { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+      #focus .progress .typed { color: var(--good); }
+      #focus .progress .remain { color: var(--muted); }
+
+      #inputBar {
+        position: absolute; left: 16px; right: 16px; bottom: 18px;
+        display: flex; gap: 10px;
+      }
+      #typingInput { flex: 1; font-size: 18px; }
+      #typingInput:focus { outline: 2px solid var(--accent); }
+
+      #modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(15,23,42,0.24); }
+      #modal .card {
+        width: min(720px, 92vw);
+        background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+      }
+      #modal .card h2 { margin: 0 0 8px; font-size: 20px; }
+      #summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 8px 0 12px; }
+      #review { max-height: 220px; overflow: auto; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
+      .pill { display: inline-flex; gap: 6px; align-items: center; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 999px; padding: 4px 8px; margin: 4px; }
+      .pill .jp { color: var(--muted); font-size: 12px; }
+
+      /* Long-text plates for sentence unit */
+      .plate.long {
+        top: 50%;
+        height: auto;
+        min-height: 64px;
+        min-width: 220px;
+        max-width: 540px;
+        padding: 10px 14px;
+        border-radius: 20px;
+        white-space: normal;
+        line-height: 1.3;
+        font-size: 14px;
+        word-break: break-word;
+      }
+      .plate.long .pos { margin-left: 6px; font-size: 11px; opacity: 0.65; }
+
+      /* Menu overlay */
+      #menu { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, #ffffff, #f1f5f9); z-index: 50; }
+      #menu .card { width: min(720px, 92vw); background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 18px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+      #menu .card h1 { margin: 0 0 6px; font-size: 24px; }
+      .fade-out { animation: fadeout 400ms ease forwards; }
+      @keyframes fadeout { to { opacity: 0; transform: translateY(-6px); pointer-events: none; } }
+
+      /* Pair layout for EN(top)/JP(bottom) */
+      .plate .pair { display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
+      .plate .pair .en { font-weight: 700; font-size: 18px; }
+      .plate .pair .ja { opacity: 0.85; font-weight: 500; font-size: 13px; margin-top: 2px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>英単語 寿司タイピング</h1>
+      <div class="sub">Sushida-like typing for English vocabulary</div>
+    </header>
+
+    <div class="toolbar" id="toolbar">
+      <div class="group">
+        <label for="packSize">パックサイズ</label>
+        <select id="packSize">
+          <option value="0" selected>なし（時間制）</option>
+          <option value="10">10問</option>
+          <option value="20">20問</option>
+          <option value="50">50問</option>
+        </select>
+      </div>
+      <div class="group">
+        <label for="unitType">単位</label>
+        <select id="unitType">
+          <option value="word" selected>単語</option>
+          <option value="phrase">フレーズ</option>
+          <option value="sentence">文</option>
+        </select>
+      </div>
+      <div class="group">
+        <label for="mode">モード</label>
+        <select id="mode">
+          <option value="learn" selected>学習コース</option>
+          <option value="test">テストコース</option>
+        </select>
+      </div>
+      <div class="group">
+        <label for="course">コース</label>
+        <select id="course">
+          <option value="3000">3000円コース (60秒)</option>
+          <option value="5000" selected>5000円コース (90秒)</option>
+          <option value="10000">10000円コース (120秒)</option>
+          <option value="custom">自由設定</option>
+        </select>
+      </div>
+      <div class="group">
+        <label for="wordSet">単語セット</label>
+        <select id="wordSet">
+          <option value="toeic" selected>TOEIC頻出</option>
+          <option value="highschool">高校レベル</option>
+          <option value="default">デフォルト</option>
+          <option value="custom">カスタム（インポート）</option>
+        </select>
+      </div>
+      <div class="group">
+        <label for="difficulty">難易度</label>
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="normal" selected>Normal</option>
+          <option value="hard">Hard</option>
+          <option value="insane">Insane</option>
+        </select>
+      </div>
+      <div class="group">
+        <label for="promptMode">プロンプト</label>
+        <select id="promptMode">
+          <option value="jp2en" selected>意味(JP) → 英単語(EN)</option>
+          <option value="en2en">英語定義 → 英単語</option>
+        </select>
+      </div>
+      <div class="group">
+        <label>オプション</label>
+        <div class="toggle"><input type="checkbox" id="optHints" checked /><span>ヒント表示</span></div>
+        <div class="toggle"><input type="checkbox" id="optVoice" /><span>音声(英語)読み上げ</span></div>
+      </div>
+      <div class="group">
+        <label for="roundTime">制限時間</label>
+        <select id="roundTime">
+          <option value="60">60秒</option>
+          <option value="90" selected>90秒</option>
+          <option value="120">120秒</option>
+        </select>
+      </div>
+      <div class="group">
+        <label for="customSeconds">カスタム秒数</label>
+        <input id="customSeconds" type="number" min="15" max="600" step="5" value="90" />
+      </div>
+      <div class="group">
+        <label>単語リスト</label>
+        <input type="file" id="importFile" accept=".json,.txt,.csv" />
+      </div>
+      <div class="group">
+        <label>操作</label>
+        <div style="display:flex; gap:8px;">
+          <button id="btnStart" class="primary">スタート</button>
+          <button id="btnPause">一時停止</button>
+          <button id="btnReset">リセット</button>
+          <button id="btnOpenMenu">メニュー</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="label">正解数</div><div class="value" id="score">0</div></div>
+      <div class="stat"><div class="label">ミス</div><div class="value" id="miss">0</div></div>
+      <div class="stat"><div class="label">連続</div><div class="value" id="streak">0</div></div>
+      <div class="stat"><div class="label">残り時間</div><div class="value" id="time">0</div></div>
+      <div class="stat"><div class="label">ライフ</div><div class="value" id="lives">3</div></div>
+    </div>
+
+    <div id="board">
+      <div id="focus">
+        <div class="prompt">
+          <div class="head">ターゲットのヒント</div>
+          <div class="text" id="promptText">スタートで開始。意味に合う英単語をタイプ！</div>
+          
+        </div>
+        <div class="progress">
+          <div class="word"><span class="typed" id="typed"></span><span class="remain" id="remain"></span></div>
+        </div>
+      </div>
+      <div id="lane"></div>
+      <div id="inputBar">
+        <input id="typingInput" type="text" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="ここにタイプ (英字のみ)" />
+      </div>
+    </div>
+
+    <!-- Menu overlay -->
+    <div id="menu">
+      <div class="card">
+        <h1>英単語 寿司タイピング</h1>
+        <div style="color:var(--muted); margin-bottom:10px;">学習/テストのモードとコースを選び、スタート！</div>
+        <div style="display:grid; grid-template-columns: repeat(2,1fr); gap:10px;">
+          <div>
+            <label for="mode">モード</label>
+            <select id="menuMode">
+              <option value="learn" selected>学習コース</option>
+              <option value="test">テストコース</option>
+            </select>
+          </div>
+          <div>
+            <label for="menuCourse">コース</label>
+            <select id="menuCourse">
+              <option value="3000">3000円コース (60秒)</option>
+              <option value="5000" selected>5000円コース (90秒)</option>
+              <option value="10000">10000円コース (120秒)</option>
+              <option value="custom">自由設定</option>
+            </select>
+          </div>
+          <div>
+            <label for="menuUnit">単位</label>
+            <select id="menuUnit">
+              <option value="word" selected>単語</option>
+              <option value="phrase">フレーズ</option>
+              <option value="sentence">文</option>
+            </select>
+          </div>
+          <div>
+            <label for="menuPack">パックサイズ</label>
+            <select id="menuPack">
+              <option value="0" selected>なし（時間制）</option>
+              <option value="10">10問</option>
+              <option value="20">20問</option>
+              <option value="50">50問</option>
+            </select>
+          </div>
+          <div>
+            <label for="menuWordSet">単語セット</label>
+            <select id="menuWordSet">
+              <option value="toeic" selected>TOEIC頻出</option>
+              <option value="highschool">高校レベル</option>
+              <option value="default">デフォルト</option>
+            </select>
+          </div>
+          <div>
+            <label for="menuPrompt">プロンプト</label>
+            <select id="menuPrompt">
+              <option value="jp2en" selected>意味(JP) → 英単語(EN)</option>
+              <option value="en2en">英語定義 → 英単語</option>
+            </select>
+          </div>
+          <div>
+            <label for="menuDifficulty">難易度</label>
+            <select id="menuDifficulty">
+              <option value="easy">Easy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="hard">Hard</option>
+              <option value="insane">Insane</option>
+            </select>
+          </div>
+          <div>
+            <label for="menuVoice">音声読み上げ</label>
+            <div class="toggle"><input type="checkbox" id="menuVoice" /><span>出現時に読み上げ</span></div>
+          </div>
+          <div>
+            <label for="menuSeconds">秒数（自由設定/学習で使用）</label>
+            <input id="menuSeconds" type="number" min="15" max="600" step="5" value="90" />
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+          <button id="btnStartMenu" class="primary">スタート</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal">
+      <div class="card">
+        <h2>ラウンド結果</h2>
+        <div id="summary">
+          <div class="stat"><div class="label">正解数</div><div class="value" id="sumScore">0</div></div>
+          <div class="stat"><div class="label">正確性</div><div class="value" id="sumAcc">0%</div></div>
+          <div class="stat"><div class="label">ミス</div><div class="value" id="sumMiss">0</div></div>
+        </div>
+        <div style="color:var(--muted); margin-bottom:6px;">レビュー (苦手単語)
+          <button id="btnReview" class="primary" style="float:right; width:auto;">レビューだけでもう1回</button>
+        </div>
+        <div id="review"></div>
+        <div style="color:var(--muted); margin:10px 0 4px;">今回入力した単語</div>
+        <div id="played" style="max-height:220px; overflow:auto; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+        <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
+          <button id="btnReplay" class="primary">もう一度</button>
+          <button id="btnOpenMenuFromModal">設定を開く</button>
+          <button id="btnClose">閉じる</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+  </html>

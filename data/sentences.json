@@ -1,0 +1,23 @@
+[
+  { "en": "I am looking forward to meeting you.", "ja": "お会いするのを楽しみにしています。", "pos": "sent.", "def": "I am excited to meet you." },
+  { "en": "Could you speak more slowly, please?", "ja": "もっとゆっくり話してください。", "pos": "sent.", "def": "Please speak slowly." },
+  { "en": "This product comes with a two-year warranty.", "ja": "この製品には2年保証が付いています。", "pos": "sent.", "def": "There is a two-year guarantee." },
+  { "en": "I will send you the updated schedule tomorrow.", "ja": "明日更新した予定をお送りします。", "pos": "sent.", "def": "I will email the new schedule tomorrow." },
+  { "en": "The meeting has been rescheduled for next Monday.", "ja": "会議は来週の月曜日に再設定されました。", "pos": "sent.", "def": "The meeting was moved to next Monday." },
+  { "en": "Please feel free to contact me anytime.", "ja": "いつでも遠慮なくご連絡ください。", "pos": "sent.", "def": "Contact me whenever you like." },
+  { "en": "We need to reduce costs without losing quality.", "ja": "品質を落とさずにコストを削減する必要があります。", "pos": "sent.", "def": "Cut costs while keeping quality." },
+  { "en": "It would be great if you could join us.", "ja": "ご参加いただけると嬉しいです。", "pos": "sent.", "def": "We would be happy if you joined." },
+  { "en": "I apologize for the inconvenience.", "ja": "ご不便をおかけして申し訳ございません。", "pos": "sent.", "def": "Sorry for the trouble." },
+  { "en": "Thank you for your continued support.", "ja": "いつもご支援いただきありがとうございます。", "pos": "sent.", "def": "Thanks for your ongoing support." },
+  { "en": "Let me know if you have any questions.", "ja": "ご不明点があればお知らせください。", "pos": "sent.", "def": "Please ask if you have questions." },
+  { "en": "We will keep you updated on the progress.", "ja": "進捗については随時ご報告します。", "pos": "sent.", "def": "We will report our progress." },
+  { "en": "The office will be closed during the holidays.", "ja": "休暇中はオフィスを閉鎖します。", "pos": "sent.", "def": "The office closes for the holidays." },
+  { "en": "I am afraid I will be a little late.", "ja": "少し遅れそうです。", "pos": "sent.", "def": "I will arrive a bit late." },
+  { "en": "Could you confirm the appointment time?", "ja": "面会時間をご確認いただけますか。", "pos": "sent.", "def": "Please check the meeting time." },
+  { "en": "I will get back to you as soon as possible.", "ja": "できるだけ早く折り返します。", "pos": "sent.", "def": "I will reply as soon as I can." },
+  { "en": "The shipment is expected to arrive next week.", "ja": "出荷は来週到着予定です。", "pos": "sent.", "def": "The delivery should arrive next week." },
+  { "en": "Please find the attached file.", "ja": "添付ファイルをご確認ください。", "pos": "sent.", "def": "See the attached file." },
+  { "en": "We appreciate your cooperation.", "ja": "ご協力に感謝いたします。", "pos": "sent.", "def": "Thank you for your cooperation." },
+  { "en": "I hope this email finds you well.", "ja": "お元気でお過ごしのことと存じます。", "pos": "sent.", "def": "I hope you are well." }
+]
+
